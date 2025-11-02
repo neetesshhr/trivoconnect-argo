@@ -1,8 +1,12 @@
+# This file deploys Prometheus, Grafana, Loki, and Promtail
+# All components will be installed in the "monitoring" namespace.
+
 # --- 1. PROMETHEUS (Metrics Server) & GRAFANA (Dashboard) ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: monitoring-stack
+  # This resource lives in the 'argocd' namespace
   namespace: argocd
 spec:
   project: default
@@ -12,6 +16,8 @@ spec:
     targetRevision: 58.1.0
     helm:
       values: |
+        # This value tells the CHART to create its resources
+        # in the 'monitoring' namespace.
         namespace: "monitoring"
         
         grafana:
@@ -25,12 +31,7 @@ spec:
             ingressClassName: nginx
             annotations:
               cert-manager.io/cluster-issuer: "letsencrypt-http"
-              
-              # --- THIS IS THE FIX ---
-              # Allow HTTP traffic for the Let's Encrypt challenge
               nginx.ingress.kubernetes.io/ssl-redirect: "false"
-              # --- END OF FIX ---
-              
             hosts:
               - grafana.trivoconnect.com
             tls:
@@ -41,6 +42,7 @@ spec:
           additionalDataSources:
             - name: Loki
               type: loki
+              # This now correctly finds Loki in the same 'monitoring' namespace
               url: http://loki-stack.monitoring.svc.cluster.local:3100
               access: proxy
               jsonData: {}
@@ -57,13 +59,17 @@ spec:
 
   destination:
     server: https://kubernetes.default.svc
-    namespace: argocd
+    # --- THIS IS THE FIX ---
+    # This tells Argo CD to deploy the chart's resources
+    # into the 'monitoring' namespace.
+    namespace: monitoring
+    # --- END OF FIX ---
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-    - "CreateNamespace=true"
+    - "CreateNamespace=true" # This will now create the 'monitoring' namespace
 
 ---
 
@@ -72,6 +78,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: logging-stack
+  # This resource lives in the 'argocd' namespace
   namespace: argocd
 spec:
   project: default
@@ -81,7 +88,10 @@ spec:
     targetRevision: 2.13.0
     helm:
       values: |
+        # This value tells the CHART to create its resources
+        # in the 'monitoring' namespace.
         namespace: "monitoring"
+        
         loki:
           persistence:
             enabled: true
@@ -93,10 +103,14 @@ spec:
 
   destination:
     server: https://kubernetes.default.svc
-    namespace: argocd
+    # --- THIS IS THE FIX ---
+    # This also tells Argo CD to deploy the chart's resources
+    # into the 'monitoring' namespace.
+    namespace: monitoring
+    # --- END OF FIX ---
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-    - "CreateNamespace=true"
+    - "CreateNamespace=true" # This will also see the 'monitoring' namespace
