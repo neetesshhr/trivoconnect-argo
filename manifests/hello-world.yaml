@@ -46,20 +46,16 @@ spec:
 
 ---
 
-# --- 4. The Ingress ---
+# --- 4. The Ingress (HTTP-only) ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: hello-world-ingress
   namespace: hello-world
   annotations:
-    cert-manager.io/cluster-issuer: "letsencrypt-cloudflare"
+    # Tell NGINX to handle this
     kubernetes.io/ingress.class: "nginx"
 spec:
-  tls:
-  - hosts:
-    - hello.trivoconnect.com
-    secretName: hello-tls-secret
   rules:
   - host: hello.trivoconnect.com
     http:
