@@ -9,14 +9,18 @@ spec:
     repoURL: git@github.com:neetesshhr/trivoconnect-argo.git
     targetRevision: HEAD
     path: manifests
+    
+  # --- THIS IS THE FIX ---
+  # The "root" app's job is to create other Applications.
+  # All Application resources MUST be created in the "argocd" namespace.
   destination:
     server: https://kubernetes.default.svc
-    namespace: default
+    namespace: argocd 
+  # --- END OF FIX ---
+  
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    # --- THIS IS THE FIX ---
-    # It must be a list of strings, not a list of objects.
     syncOptions:
     - "CreateNamespace=true"

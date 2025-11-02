@@ -1,7 +1,8 @@
 # This file deploys Prometheus, Grafana, Loki, and Promtail
+# All components will be installed in the "monitoring" namespace.
 
 # --- 1. PROMETHEUS (Metrics Server) & GRAFANA (Dashboard) ---
-apiVersion: argocd.argoproj.io/v1alpha1
+apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: monitoring-stack
@@ -14,6 +15,7 @@ spec:
     targetRevision: 58.1.0
     helm:
       values: |
+        # This chart's components will go into the "monitoring" namespace
         namespace: "monitoring"
         
         grafana:
@@ -26,9 +28,7 @@ spec:
             enabled: true
             ingressClassName: nginx
             annotations:
-              # --- THIS IS THE CHANGE ---
               cert-manager.io/cluster-issuer: "letsencrypt-http"
-              # --- END OF CHANGE ---
             hosts:
               - grafana.trivoconnect.com
             tls:
@@ -39,7 +39,10 @@ spec:
           additionalDataSources:
             - name: Loki
               type: loki
-              url: http://loki-stack.loki.svc.cluster.local:3100
+              # --- THIS IS THE CHANGE ---
+              # Find Loki in the *monitoring* namespace
+              url: http://loki-stack.monitoring.svc.cluster.local:3100
+              # --- END OF CHANGE ---
               access: proxy
               jsonData: {}
 
@@ -54,6 +57,7 @@ spec:
                       storage: 10Gi
 
   destination:
+    # This Application resource itself lives in the "argocd" namespace
     server: https://kubernetes.default.svc
     namespace: argocd
   syncPolicy:
@@ -66,7 +70,7 @@ spec:
 ---
 
 # --- 2. LOKI (Log Server) & PROMTAIL (Log Agent) ---
-apiVersion: argocd.argoproj.io/v1alpha1
+apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: logging-stack
@@ -79,7 +83,11 @@ spec:
     targetRevision: 2.13.0
     helm:
       values: |
-        namespace: "loki"
+        # --- THIS IS THE CHANGE ---
+        # This chart's components will also go into the "monitoring" namespace
+        namespace: "monitoring"
+        # --- END OF CHANGE ---
+
         loki:
           persistence:
             enabled: true
@@ -90,6 +98,7 @@ spec:
           enabled: false
 
   destination:
+    # This Application resource itself lives in the "argocd" namespace
     server: https://kubernetes.default.svc
     namespace: argocd
   syncPolicy:
