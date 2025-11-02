@@ -16,5 +16,7 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    # --- THIS IS THE FIX ---
+    # It must be a list of strings, not a list of objects.
     syncOptions:
-    - CreateNamespace: true
+    - "CreateNamespace=true"
