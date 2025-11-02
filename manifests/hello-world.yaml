@@ -43,11 +43,9 @@ spec:
     spec:
       containers:
       - name: httpd-server
-        # Using the official httpd (Apache) image
         image: httpd:2.4
         ports:
         - containerPort: 80
-        # Mount our custom index.html into the web server's directory
         volumeMounts:
         - name: html-volume
           mountPath: /usr/local/apache2/htdocs/index.html
@@ -82,9 +80,13 @@ metadata:
   name: hello-world-ingress
   namespace: hello-world
   annotations:
-    # This annotation is correct and critical
-    kubernetes.io/ingress.class: "nginx"
+    # This annotation is NO LONGER needed for class
+    # kubernetes.io/ingress.class: "nginx"
 spec:
+  # --- THIS IS THE FIX ---
+  # This field is required by modern Ingress controllers
+  ingressClassName: nginx
+  # --- END OF FIX ---
   rules:
   - host: hello.trivoconnect.com
     http:

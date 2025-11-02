@@ -4,11 +4,12 @@ metadata:
   name: argocd-server-ingress
   namespace: argocd
   annotations:
-    # Tell NGINX to handle this
-    kubernetes.io/ingress.class: "nginx"
-    # Specify the backend protocol is HTTP
+    # kubernetes.io/ingress.class: "nginx" # <-- This is removed
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
 spec:
+  # --- THIS IS THE FIX ---
+  ingressClassName: nginx
+  # --- END OF FIX ---
   rules:
   - host: argocd.trivoconnect.com
     http:
@@ -19,5 +20,4 @@ spec:
           service:
             name: argocd-server
             port:
-              # This is Argo's default HTTP port
-              number: 8080 
+              number: 8080
