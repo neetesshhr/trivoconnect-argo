@@ -4,12 +4,19 @@ metadata:
   name: argocd-server-ingress
   namespace: argocd
   annotations:
-    # kubernetes.io/ingress.class: "nginx" # <-- This is removed
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    # --- THIS IS THE CHANGE ---
+    cert-manager.io/cluster-issuer: "letsencrypt-http"
+    # --- END OF CHANGE ---
+    
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/proxy-ssl-verify: "off"
 spec:
-  # --- THIS IS THE FIX ---
   ingressClassName: nginx
-  # --- END OF FIX ---
+  tls:
+  - hosts:
+    - argocd.trivoconnect.com
+    secretName: argocd-tls-secret
   rules:
   - host: argocd.trivoconnect.com
     http:
@@ -20,4 +27,4 @@ spec:
           service:
             name: argocd-server
             port:
-              number: 8080
+              number: 443

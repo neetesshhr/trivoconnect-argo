@@ -1,0 +1,19 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-http
+spec:
+  acme:
+    # This is the production Let's Encrypt server
+    server: https://acme-v02.api.letsencrypt.org/directory
+    # Use a valid email for expiration notices
+    email: sunny@trivoconnect.com
+    privateKeySecretRef:
+      # This secret will store the issuer's private key
+      name: letsencrypt-http-key
+    solvers:
+    - http01:
+        ingress:
+          # Tell cert-manager to create challenge-solving Ingresses
+          # using our NGINX Ingress controller
+          class: nginx
