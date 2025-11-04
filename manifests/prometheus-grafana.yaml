@@ -41,14 +41,23 @@ spec:
               - hosts:
                 - grafana.trivoconnect.com
                 secretName: grafana-tls-secret
+          
+          # --- THIS IS THE FIX ---
+          # We must tell Grafana *how* to query Loki
           additionalDataSources:
             - name: Loki
               type: loki
-              # This now points to the correct, lightweight service
               url: http://loki-stack.monitoring.svc.cluster.local:3100
               access: proxy
               isDefault: false
-              jsonData: {}
+              jsonData:
+                # This line tells Grafana to use LogQL
+                derivedFields:
+                  - datasourceUid: tempo
+                    matcherRegex: 'traceID=([a-f0-9]{32})'
+                    name: traceID
+          # --- END OF FIX ---
+
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
