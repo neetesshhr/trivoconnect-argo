@@ -11,24 +11,27 @@ spec:
     targetRevision: 6.45.2
     helm:
       values: |
-        # We will now use the default distributed mode, 
-        # which works best with S3.
-        
-        grafana:
-          enabled: false
-        promtail:
-          enabled: false
-          
-        # --- THIS IS THE NEW S3 CONFIG ---
+        # Loki runs in "SimpleScalable" (default) mode for S3
+        deploymentMode: SimpleScalable
+
         loki:
-          # 1. We inject the secret "loki-s3-creds" into the pod
-          #    as environment variables.
+          commonConfig:
+            replication_factor: 1
+
+          # Loki storage backend: S3
+          storage:
+            type: s3
+            bucketNames:
+              chunks: loki-chunks
+              ruler:  loki-ruler
+              admin:  loki-admin
+
+          # Pass S3 credentials to Loki pods
           extraEnvFrom:
             - secretRef:
-                name: loki-s3-creds # The secret you just created
-          
-          # 2. We tell Loki's config to use S3 and
-          #    pull its keys from those env vars.
+                name: loki-s3-creds
+
+          # Loki configuration for S3 backend
           config:
             schema_config:
               configs:
@@ -39,28 +42,31 @@ spec:
                   index:
                     prefix: loki_index_
                     period: 24h
-            
+
             storage_config:
-              # Use the "s3" object store
               boltdb_shipper:
-                active_index_directory: /var/loki/data/index
-                cache_location: /var/loki/data/cache
                 shared_store: s3
+                active_index_directory: /var/loki/index
+                cache_location: /var/loki/cache
               
               aws:
+                s3: s3://trivo-logs-bucket
+                region: us-east-1
+                s3forcepathstyle: true
                 access_key_id: $(S3_ACCESS_KEY_ID)
                 secret_access_key: $(S3_SECRET_ACCESS_KEY)
-                
-                # --- REPLACE THESE ---
-                region: "us-east-1"
-                s3: "s3://trivo-logs-bucket"
-                # --- END REPLACE ---
 
-        # 3. We no longer use filesystem persistence
+        # Disable Grafana and Promtail (you already deploy separately)
+        grafana:
+          enabled: false
+        promtail:
+          enabled: false
+
+        # Disable local persistence, as S3 is used for storage
         persistence:
           enabled: false
 
-
+        # Enable public ingress for Loki API
         ingress:
           enabled: true
           ingressClassName: nginx
@@ -72,13 +78,17 @@ spec:
               paths: []
           tls:
             - hosts:
-              - loki.trivoconnect.com
+                - loki.trivoconnect.com
               secretName: loki-tls-secret
 
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
-    
+
   syncPolicy:
-    automated: { prune: true, selfHeal: true }
-    syncOptions: [ "CreateNamespace=true", "ServerSideApply=true" ]
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
