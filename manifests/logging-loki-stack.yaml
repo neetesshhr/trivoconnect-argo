@@ -38,7 +38,7 @@ spec:
           tls:
             - hosts:
               - lki.trivoconnect.com
-              secretName: loki-tls-secret
+              secretName: lki-tls-secret
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
