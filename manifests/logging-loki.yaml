@@ -1,68 +1,68 @@
-# # File: manifests/logging-loki.yaml
+# File: manifests/logging-loki.yaml
 
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   # This is the app tile in Argo CD
-#   name: logging-loki
-#   namespace: argocd
-# spec:
-#   project: default
-#   source:
-#     repoURL: https://grafana.github.io/helm-charts
-#     chart: loki-stack
-#     # --- THIS IS THE FIX ---
-#     # "2.13.0" did not exist. "4.2.0" is a valid, recent version.
-#     targetRevision: 6.45.2
-#     # --- END OF FIX ---
-#     helm:
-#       values: |
-#         # 1. We already have Grafana, so disable this one
-#         grafana:
-#           enabled: false
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  # This is the app tile in Argo CD
+  name: logging-loki
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: loki-stack
+    # --- THIS IS THE FIX ---
+    # "2.13.0" did not exist. "4.2.0" is a valid, recent version.
+    targetRevision: 6.45.2
+    # --- END OF FIX ---
+    helm:
+      values: |
+        # 1. We already have Grafana, so disable this one
+        grafana:
+          enabled: false
 
-#         # 2. Loki Configuration
-#         loki:
-#           # Use GKE's default 'standard-rwo' storage class
-#           storageClassName: "standard-rwo"
-#           persistence:
-#             enabled: true
-#             size: 20Gi # 20GB for logs
+        # 2. Loki Configuration
+        loki:
+          # Use GKE's default 'standard-rwo' storage class
+          storageClassName: "standard-rwo"
+          persistence:
+            enabled: true
+            size: 20Gi # 20GB for logs
         
-#         # 3. Promtail (the GKE log shipper)
-#         # This will ship your *cluster's* pod logs to Loki
-#         promtail:
-#           enabled: true
-#           storageClassName: "standard-rwo"
+        # 3. Promtail (the GKE log shipper)
+        # This will ship your *cluster's* pod logs to Loki
+        promtail:
+          enabled: true
+          storageClassName: "standard-rwo"
 
-#         # 4. Ingress (to receive logs from EC2)
-#         # This creates the public URL for your EC2 server
-#         ingress:
-#           enabled: true
-#           ingressClassName: nginx
-#           annotations:
-#             # Use our 'letsencrypt-http' issuer
-#             cert-manager.io/cluster-issuer: "letsencrypt-http"
-#             # Allow cert-manager to solve the HTTP challenge
-#             nginx.ingress.kubernetes.io/ssl-redirect: "false"
-#           hosts:
-#             - loki.trivoconnect.com
-#           paths:
-#             - /
-#           tls:
-#             - hosts:
-#               - loki.trivoconnect.com
-#               secretName: loki-tls-secret
+        # 4. Ingress (to receive logs from EC2)
+        # This creates the public URL for your EC2 server
+        ingress:
+          enabled: true
+          ingressClassName: nginx
+          annotations:
+            # Use our 'letsencrypt-http' issuer
+            cert-manager.io/cluster-issuer: "letsencrypt-http"
+            # Allow cert-manager to solve the HTTP challenge
+            nginx.ingress.kubernetes.io/ssl-redirect: "false"
+          hosts:
+            - loki.trivoconnect.com
+          paths:
+            - /
+          tls:
+            - hosts:
+              - loki.trivoconnect.com
+              secretName: loki-tls-secret
 
-#   destination:
-#     # Tell Argo CD to deploy this into the 'monitoring' namespace
-#     server: https://kubernetes.default.svc
-#     namespace: monitoring
+  destination:
+    # Tell Argo CD to deploy this into the 'monitoring' namespace
+    server: https://kubernetes.default.svc
+    namespace: monitoring
     
-#   syncPolicy:
-#     automated:
-#       prune: true
-#       selfHeal: true
-#     syncOptions:
-#     - "CreateNamespace=true"
-#     - "ServerSideApply=true"
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - "CreateNamespace=true"
+    - "ServerSideApply=true"
