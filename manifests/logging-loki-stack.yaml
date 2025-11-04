@@ -1,45 +1,45 @@
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: loki-stack
-#   namespace: argocd
-# spec:
-#   project: default
-#   source:
-#     repoURL: https://grafana.github.io/helm-charts
-#     chart: loki-stack
-#     targetRevision: 2.10.3
-#     helm:
-#       values: |
-#         namespace: "monitoring"
-#         grafana:
-#           enabled: false
-#         loki:
-#           storageClassName: "standard-rwo"
-#           persistence:
-#             enabled: true
-#             size: 10Gi # 10GB is fine
-#         promtail:
-#           enabled: true
-#           storageClassName: "standard-rwo"
-#         ingress:
-#           enabled: true
-#           ingressClassName: nginx
-#           annotations:
-#             cert-manager.io/cluster-issuer: "letsencrypt-http"
-#             nginx.ingress.kubernetes.io/ssl-redirect: "false"
-#           hosts:
-#             - host: loki.trivoconnect.com
-#               paths:
-#                 - path: /
-#                   pathType: Prefix
-#           tls:
-#             - hosts:
-#               - loki.trivoconnect.com
-#               secretName: loki-tls-secret
-#   destination:
-#     server: https://kubernetes.default.svc
-#     namespace: monitoring
-#   syncPolicy:
-#     automated: { prune: true, selfHeal: true }
-#     syncOptions: [ "CreateNamespace=true", "ServerSideApply=true" ]
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki-stack
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: loki-stack
+    targetRevision: 2.10.3
+    helm:
+      values: |
+        namespace: "monitoring"
+        grafana:
+          enabled: false
+        loki:
+          storageClassName: "standard-rwo"
+          persistence:
+            enabled: true
+            size: 10Gi
+        promtail:
+          enabled: true
+          storageClassName: "standard-rwo"
+        ingress:
+          enabled: true
+          ingressClassName: nginx
+          annotations:
+            cert-manager.io/cluster-issuer: "letsencrypt-http"
+            nginx.ingress.kubernetes.io/ssl-redirect: "false"
+          hosts:
+            - host: loki.trivoconnect.com
+              paths:
+                - path: /
+                  pathType: Prefix
+          tls:
+            - hosts:
+              - loki.trivoconnect.com
+              secretName: loki-tls-secret
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [ "CreateNamespace=true", "ServerSideApply=true" ]
