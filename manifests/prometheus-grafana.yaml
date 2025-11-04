@@ -22,14 +22,10 @@ spec:
                   resources:
                     requests:
                       storage: 10Gi
-
             additionalScrapeConfigs:
               - job_name: 'ec2-node'
                 static_configs:
-                  # --- THIS IS THE FIX ---
-                  # Remove the 'http://' prefix
                   - targets: ['34.227.214.46:9100']
-                  # --- END OF FIX ---
                     labels:
                       instance: 'trivoconnect-ec2-server'
 
@@ -40,6 +36,54 @@ spec:
             storageClassName: "standard-rwo"
             accessModes: ["ReadWriteOnce"]
             size: 10Gi
+            
+          # --- THIS IS THE NEW SSO CONFIGURATION ---
+          
+          # 1. Disable the default 'admin' user (we no longer need it)
+          admin:
+            # We set the user to null to disable it
+            user: null 
+
+          # 2. Load our K8s secret as environment variables
+          envFromSecrets:
+            - name: grafana-google-sso
+
+          # 3. Configure grafana.ini to use Generic OAuth
+          grafana.ini:
+            server:
+              root_url: "https://grafana.trivoconnect.com"
+            auth:
+              disable_login_form: true
+              
+            # We replace [auth.google] with [auth.generic_oauth]
+            auth.generic_oauth:
+              enabled: true
+              name: "Google"
+              # These pull from your 'grafana-google-sso' K8s secret
+              client_id: $GOOGLE_CLIENT_ID
+              client_secret: $GOOGLE_CLIENT_SECRET
+              
+              # These are Google's standard endpoints
+              auth_url: https://accounts.google.com/o/oauth2/auth
+              token_url: https://oauth2.googleapis.com/token
+              api_url: https://www.googleapis.com/oauth2/v1/userinfo
+              
+              # This is the new scope we added in the Google Console
+              scopes: "openid email profile https://www.googleapis.com/auth/admin.directory.group.readonly"
+              
+              # This tells Grafana how to find the user's groups
+              groups_attribute_path: "https://admin.googleapis.com/admin/directory/v1/groups?userKey=__user_email__"
+              
+              # This is the MAGIC:
+              # It checks if the list of groups contains one with the email 'grafana-admins@trivoconnect.com'.
+              # If it does, make the user an "Admin".
+              # If not, make them a "Viewer".
+              role_attribute_path: "contains(groups[*].email, 'grafana@trivoconnect.com') ? 'Admin' : 'Viewer'"
+              
+              allowed_domains: "trivoconnect.com"
+              allow_sign_up: true
+          # --- END OF SSO CONFIGURATION ---
+
           ingress:
             enabled: true
             ingressClassName: nginx
@@ -52,6 +96,7 @@ spec:
               - hosts:
                 - grafana.trivoconnect.com
                 secretName: grafana-tls-secret
+          
           additionalDataSources:
             - name: Loki
               type: loki
@@ -61,7 +106,7 @@ spec:
               jsonData:
                 derivedFields:
                   - datasourceUid: tempo
-                    matcherRegex: 'traceID=([a-f0-9]{32})'
+                    matcherRegex: 'traceID=([a-f0-f0-9]{32})'
                     name: traceID
   destination:
     server: https://kubernetes.default.svc
