@@ -14,7 +14,6 @@ spec:
         namespace: "monitoring"
         grafana:
           enabled: false
-          
         loki:
           image:
             tag: '2.9.3'
@@ -22,13 +21,9 @@ spec:
           persistence:
             enabled: true
             size: 10Gi
-            
         promtail:
           enabled: true
           storageClassName: "standard-rwo"
-          
-        # --- THIS IS THE FIX ---
-        # The 'ingress:' block is now at the correct top-level indentation.
         ingress:
           enabled: true
           ingressClassName: nginx
@@ -37,15 +32,13 @@ spec:
             nginx.ingress.kubernetes.io/ssl-redirect: "false"
           hosts:
             - host: lki.trivoconnect.com
-              paths:
-                - path: /
-                  pathType: Prefix
+          paths:
+            - path: /
+              pathType: Prefix
           tls:
             - hosts:
               - lki.trivoconnect.com
-              secretName: loki-tls-secret
-        # --- END OF FIX ---
-
+              secretName: lki-tls-secret
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

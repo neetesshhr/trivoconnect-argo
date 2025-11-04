@@ -41,9 +41,6 @@ spec:
               - hosts:
                 - grafana.trivoconnect.com
                 secretName: grafana-tls-secret
-          
-          # --- THIS IS THE FIX ---
-          # This tells Grafana HOW to talk to Loki
           additionalDataSources:
             - name: Loki
               type: loki
@@ -51,10 +48,10 @@ spec:
               access: proxy
               isDefault: false
               jsonData:
-                # This tells Grafana to use LogQL
-                queryType: "LOKI"
-          # --- END OF FIX ---
-
+                derivedFields:
+                  - datasourceUid: tempo
+                    matcherRegex: 'traceID=([a-f0-9]{32})'
+                    name: traceID
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
