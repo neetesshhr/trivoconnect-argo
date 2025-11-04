@@ -11,19 +11,12 @@ spec:
     targetRevision: 6.45.2
     helm:
       values: |
-        # Loki runs in "SimpleScalable" mode (recommended for S3)
         deploymentMode: SimpleScalable
 
         loki:
           commonConfig:
             replication_factor: 1
 
-          # Attach your secret with AWS credentials
-          extraEnvFrom:
-            - secretRef:
-                name: loki-s3-creds
-
-          # S3 bucket details (for Helm chart internal templates)
           storage:
             type: s3
             bucketNames:
@@ -31,13 +24,11 @@ spec:
               ruler: loki-ruler
               admin: loki-admin
 
-          # Loki configuration must be a YAML string
-          config: |
-            auth_enabled: false
+          extraEnvFrom:
+            - secretRef:
+                name: loki-s3-creds
 
-            server:
-              http_listen_port: 3100
-
+          config:
             schema_config:
               configs:
                 - from: 2024-11-01
@@ -53,7 +44,6 @@ spec:
                 shared_store: s3
                 active_index_directory: /var/loki/index
                 cache_location: /var/loki/cache
-
               aws:
                 s3: s3://trivo-logs-bucket
                 region: us-east-1
@@ -61,29 +51,14 @@ spec:
                 access_key_id: $(S3_ACCESS_KEY_ID)
                 secret_access_key: $(S3_SECRET_ACCESS_KEY)
 
-            limits_config:
-              retention_period: 168h
-              reject_old_samples: true
-              reject_old_samples_max_age: 168h
-
-            chunk_store_config:
-              max_look_back_period: 168h
-
-            table_manager:
-              retention_deletes_enabled: true
-              retention_period: 168h
-
-        # Disable persistence — we rely on S3
         persistence:
           enabled: false
 
-        # Disable Grafana/Promtail
         grafana:
           enabled: false
         promtail:
           enabled: false
 
-        # Optional: ingress for external Loki API access
         ingress:
           enabled: true
           ingressClassName: nginx
