@@ -63,6 +63,7 @@ spec:
               allowed_domains: "trivoconnect.com"
               allow_sign_up: true
               skip_org_role_sync: false
+              allow_assign_grafana_admin:	true
               auto_assign_org_role: "Viewer"
               scopes: "openid email profile https://www.googleapis.com/auth/admin.directory.group.readonly"
 
