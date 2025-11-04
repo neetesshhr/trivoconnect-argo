@@ -4,7 +4,6 @@ metadata:
   name: loki-server
   namespace: argocd
 spec:
-  project: default
   source:
     repoURL: https://grafana.github.io/helm-charts
     chart: loki
@@ -13,26 +12,20 @@ spec:
       values: |
         deploymentMode: SingleBinary
         loki:
-          # Use single-binary mode which supports filesystem storage. :contentReference[oaicite:1]{index=1}
-          
-
-          # Storage setup for filesystem mode.
+          commonConfig:
+            replication_factor: 1
           storage:
             type: filesystem
+            bucketNames:
+              chunks: "chunks"
+              ruler:  "ruler"
+              admin:  "admin"
             filesystem:
               directory: /var/loki/data
-
-          persistence:
-            enabled: true
-            size: 20Gi
-          storageClassName: "standard-rwo"
-
         grafana:
           enabled: false
-
         promtail:
           enabled: false
-
         ingress:
           enabled: true
           ingressClassName: nginx
@@ -46,6 +39,7 @@ spec:
             - hosts:
                 - loki.trivoconnect.com
               secretName: loki-tls-secret
+
 
   destination:
     server: https://kubernetes.default.svc
