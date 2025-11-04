@@ -31,13 +31,13 @@ spec:
             cert-manager.io/cluster-issuer: "letsencrypt-http"
             nginx.ingress.kubernetes.io/ssl-redirect: "false"
           hosts:
-            - host: loki.trivoconnect.com
+            - host: lki.trivoconnect.com
               paths:
                 - path: /
                   pathType: Prefix
           tls:
             - hosts:
-              - loki.trivoconnect.com
+              - lki.trivoconnect.com
               secretName: loki-tls-secret
   destination:
     server: https://kubernetes.default.svc
