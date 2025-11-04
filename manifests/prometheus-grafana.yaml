@@ -12,23 +12,41 @@ spec:
     helm:
       values: |
         namespace: "monitoring"
-        
-        # --- THIS IS THE NEW SECRET CONFIGURATION ---
-        # We define the secret values here as Helm parameters.
-        # We will add the actual values in the next step.
+        prometheus:
+          prometheusSpec:
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: "standard-rwo"
+                  accessModes: ["ReadWriteOnce"]
+                  resources:
+                    requests:
+                      storage: 10Gi
+            additionalScrapeConfigs:
+              - job_name: 'ec2-node'
+                static_configs:
+                  - targets: ['34.227.214.46:9100']
+                    labels:
+                      instance: 'trivoconnect-ec2-server'
+
         grafana:
+          persistence:
+            enabled: true
+            type: pvc
+            storageClassName: "standard-rwo"
+            accessModes: ["ReadWriteOnce"]
+            size: 10Gi
+            
+          # --- THIS IS THE CORRECTED SSO CONFIG ---
+          
           admin:
             user: null # Disable admin user
 
-          # This tells the Grafana chart to create a secret
-          # named 'grafana-google-sso' with our keys
-          googleOAuthSecrets:
-             enabled: true
-             name: grafana-google-sso
-             clientIdKey: GOOGLE_CLIENT_ID
-             clientSecretKey: GOOGLE_CLIENT_SECRET
+          # 1. Load our K8s secret as environment variables
+          envFromSecrets:
+            - name: grafana-google-sso # The secret you just created
 
-          # This configures grafana.ini
+          # 2. Configure grafana.ini
           grafana.ini:
             server:
               root_url: "https://grafana.trivoconnect.com"
@@ -39,10 +57,12 @@ spec:
               enabled: true
               name: "Google"
               
-              # This tells Grafana to read the client_id from the
-              # secret file mounted on the pod
-              client_id: ${__file:/etc/secrets/google_client_id}
-              client_secret: ${__file:/etc/secrets/google_client_secret}
+              # --- THIS IS THE FIX ---
+              # The '$$' escapes the $ for Helm/Argo CD
+              # The Grafana pod will correctly expand this
+              client_id: $$GOOGLE_CLIENT_ID
+              client_secret: $$GOOGLE_CLIENT_SECRET
+              # --- END OF FIX ---
               
               auth_url: https://accounts.google.com/o/oauth2/auth
               token_url: https://oauth2.googleapis.com/token
@@ -51,28 +71,15 @@ spec:
               scopes: "openid email profile https://www.googleapis.com/auth/admin.directory.group.readonly"
               
               groups_attribute_path: "https://admin.googleapis.com/admin/directory/v1/groups?userKey=__user_email__"
+              
+              # --- THIS IS YOUR FIX ---
+              # Using the correct group email address
               role_attribute_path: "contains(groups[*].email, 'grafana@trivoconnect.com') ? 'Admin' : 'Viewer'"
               
               allowed_domains: "trivoconnect.com"
               allow_sign_up: true
+          # --- END OF SSO CONFIG ---
 
-          # This part mounts the secret file into /etc/secrets/
-          extraSecretMounts:
-            - name: grafana-google-sso-file-mount
-              secretName: grafana-google-sso
-              mountPath: /etc/secrets
-              readOnly: true
-              
-          # --- END OF NEW SSO CONFIGURATION ---
-
-          # ... (rest of the file: persistence, ingress, additionalDataSources)
-          persistence:
-            enabled: true
-            type: pvc
-            storageClassName: "standard-rwo"
-            accessModes: ["ReadWriteOnce"]
-            size: 10Gi
-            
           ingress:
             enabled: true
             ingressClassName: nginx
@@ -97,24 +104,6 @@ spec:
                   - datasourceUid: tempo
                     matcherRegex: 'traceID=([a-f0-f0-9]{32})'
                     name: traceID
-                    
-        prometheus:
-          prometheusSpec:
-            storageSpec:
-              volumeClaimTemplate:
-                spec:
-                  storageClassName: "standard-rwo"
-                  accessModes: ["ReadWriteOnce"]
-                  resources:
-                    requests:
-                      storage: 10Gi
-            additionalScrapeConfigs:
-              - job_name: 'ec2-node'
-                static_configs:
-                  - targets: ['34.227.214.46:9100']
-                    labels:
-                      instance: 'trivoconnect-ec2-server'
-
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
