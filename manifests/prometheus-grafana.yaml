@@ -59,7 +59,7 @@ spec:
               api_url: https://www.googleapis.com/oauth2/v1/userinfo
               scopes: "openid email profile https://www.googleapis.com/auth/admin.directory.group.readonly"
               groups_attribute_path: "https://admin.googleapis.com/admin/directory/v1/groups?userKey=__user_email__"
-              role_attribute_path: "contains(groups[*].email, 'grafana@trivoconnect.com') ? 'Admin' : 'Viewer'"
+              role_attribute_path: "contains(email, '@trivoconnect.com') && contains(email, 'grafana') ? 'Admin' : 'Viewer'"
               allowed_domains: "trivoconnect.com"
               allow_sign_up: true
               skip_org_role_sync: false
