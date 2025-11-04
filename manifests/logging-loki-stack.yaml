@@ -21,9 +21,6 @@ spec:
           persistence:
             enabled: true
             size: 10Gi
-        promtail:
-          enabled: true
-          storageClassName: "standard-rwo"
         ingress:
           enabled: true
           ingressClassName: nginx
@@ -32,13 +29,16 @@ spec:
             nginx.ingress.kubernetes.io/ssl-redirect: "false"
           hosts:
             - host: lki.trivoconnect.com
-          paths:
-            - path: /
-              pathType: Prefix
+              paths:
+                - path: /
+                  pathType: Prefix
           tls:
             - hosts:
-              - lki.trivoconnect.com
+                - lki.trivoconnect.com
               secretName: lki-tls-secret
+        promtail:
+          enabled: true
+          storageClassName: "standard-rwo"
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
