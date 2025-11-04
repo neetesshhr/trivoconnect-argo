@@ -36,17 +36,12 @@ spec:
             storageClassName: "standard-rwo"
             accessModes: ["ReadWriteOnce"]
             size: 10Gi
-            
-          # --- THIS IS THE FIX ---
-          # This disables the faulty "leaked secret" check
           assertNoLeakedSecrets: false
-          # --- END OF FIX ---
-
+         
           admin:
             user: null 
 
-          envFromSecrets:
-            - name: grafana-google-sso 
+          envFromSecret: grafana-google-sso
 
           grafana.ini:
             server:
