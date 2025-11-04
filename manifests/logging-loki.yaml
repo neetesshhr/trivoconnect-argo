@@ -11,12 +11,13 @@ spec:
     targetRevision: 6.45.2
     helm:
       values: |
-        deploymentMode: SimpleScalable
-
+        # Note: deploymentMode MUST be under "loki" to be picked up by the chart
         loki:
+          deploymentMode: SimpleScalable
           commonConfig:
             replication_factor: 1
 
+          # S3 logical bucket names (required by chart templates)
           storage:
             type: s3
             bucketNames:
@@ -24,11 +25,19 @@ spec:
               ruler: loki-ruler
               admin: loki-admin
 
+          # Inject AWS creds (from Kubernetes Secret) as env vars into pods
           extraEnvFrom:
             - secretRef:
                 name: loki-s3-creds
 
-          config:
+          # Loki runtime configuration MUST be a YAML string (block scalar).
+          # This defines schema_config and storage_config used by the chart templates.
+          config: |
+            auth_enabled: false
+
+            server:
+              http_listen_port: 3100
+
             schema_config:
               configs:
                 - from: 2024-11-01
@@ -48,17 +57,31 @@ spec:
                 s3: s3://trivo-logs-bucket
                 region: us-east-1
                 s3forcepathstyle: true
+                # These refer to env vars injected from the Secret above
                 access_key_id: $(S3_ACCESS_KEY_ID)
                 secret_access_key: $(S3_SECRET_ACCESS_KEY)
 
+            limits_config:
+              retention_period: 168h
+
+            chunk_store_config:
+              max_look_back_period: 168h
+
+            table_manager:
+              retention_deletes_enabled: true
+              retention_period: 168h
+
+        # We rely on S3, so local persistence turned off for index/chunks
         persistence:
           enabled: false
 
+        # Disable bundled grafana/promtail (you said you have them separately)
         grafana:
           enabled: false
         promtail:
           enabled: false
 
+        # Ingress (optional) - adjust host/annotations/secret to your env
         ingress:
           enabled: true
           ingressClassName: nginx
