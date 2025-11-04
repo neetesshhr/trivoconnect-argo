@@ -29,12 +29,17 @@ spec:
           # This tells the SingleBinary pod to use the filesystem
           storage:
             type: 'filesystem'
+            bucketNames:
+              chunks: loki-chunks
+              ruler: loki-ruler
+              admin: loki-admin
           
           # This configures the persistent volume
           storageClassName: "standard-rwo"
           persistence:
             enabled: true
-            size: 20Gi # 20GB for logs
+            size: 20Gi
+            storageClassName: standard-rwo
         
         ingress:
           enabled: true
