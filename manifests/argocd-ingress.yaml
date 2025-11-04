@@ -7,12 +7,8 @@ metadata:
     cert-manager.io/cluster-issuer: "letsencrypt-http"
     kubernetes.io/ingress.class: "nginx"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-    nginx.ingress.kubernetes.ioTwo/proxy-ssl-verify: "off"
-    
-    # --- THIS IS THE FIX ---
-    # Allow HTTP traffic for the Let's Encrypt challenge
+    nginx.ingress.kubernetes.io/proxy-ssl-verify: "off"
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    # --- END OF FIX ---
 spec:
   ingressClassName: nginx
   tls:

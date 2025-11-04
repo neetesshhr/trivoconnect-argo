@@ -12,7 +12,6 @@ spec:
     helm:
       values: |
         namespace: "monitoring"
-        
         prometheus:
           prometheusSpec:
             storageSpec:
@@ -23,7 +22,6 @@ spec:
                   resources:
                     requests:
                       storage: 10Gi
-            
         grafana:
           persistence:
             enabled: true
@@ -31,7 +29,6 @@ spec:
             storageClassName: "standard-rwo"
             accessModes: ["ReadWriteOnce"]
             size: 10Gi
-
           ingress:
             enabled: true
             ingressClassName: nginx
@@ -44,19 +41,17 @@ spec:
               - hosts:
                 - grafana.trivoconnect.com
                 secretName: grafana-tls-secret
-          
           additionalDataSources:
             - name: Loki
               type: loki
-              url: url: http://loki-stack.monitoring.svc.cluster.local:3100
+              # This now points to the correct, lightweight service
+              url: http://loki-stack.monitoring.svc.cluster.local:3100
               access: proxy
               isDefault: false
               jsonData: {}
-
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
-    
   syncPolicy:
     automated: { prune: true, selfHeal: true }
     syncOptions: [ "CreateNamespace=true", "ServerSideApply=true" ]
