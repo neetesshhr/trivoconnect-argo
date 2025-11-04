@@ -14,6 +14,7 @@ spec:
         namespace: "monitoring"
         grafana:
           enabled: false
+        
         loki:
           image:
             tag: '2.9.3'
@@ -21,28 +22,34 @@ spec:
           persistence:
             enabled: true
             size: 10Gi
-          ingress:
-            enabled: true
-            ingressClassName: nginx
-            annotations:
-              cert-manager.io/cluster-issuer: "letsencrypt-http"
-              nginx.ingress.kubernetes.io/ssl-redirect: "true"
-            hosts:
-              - host: lki.trivoconnect.com
-                paths:
-                  - path: /
-                    pathType: Prefix
-            tls:
-              - hosts:
-                  - lki.trivoconnect.com
-                secretName: lki-tls-secret
+            
         promtail:
           enabled: true
           storageClassName: "standard-rwo"
+          
+        # --- THIS BLOCK IS FIXED ---
+        # 1. 'ingress:' is now at the top level (no indentation)
+        # 2. 'ssl-redirect' is set to "false"
+        ingress:
+          enabled: true
+          ingressClassName: nginx
+          annotations:
+            cert-manager.io/cluster-issuer: "letsencrypt-http"
+            nginx.ingress.kubernetes.io/ssl-redirect: "false"
+          hosts:
+            - host: lki.trivoconnect.com
+              paths:
+                - path: /
+                  pathType: Prefix
+          tls:
+            - hosts:
+              - lki.trivoconnect.com
+              secretName: loki-tls-secret
+        # --- END OF FIX ---
+
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
   syncPolicy:
     automated: { prune: true, selfHeal: true }
     syncOptions: [ "CreateNamespace=true", "ServerSideApply=true" ]
-    
