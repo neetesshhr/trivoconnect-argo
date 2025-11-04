@@ -10,10 +10,10 @@ spec:
   project: default
   source:
     repoURL: https://grafana.github.io/helm-charts
-    chart: loki-stack
+    chart: loki
     # --- THIS IS THE FIX ---
     # "2.13.0" did not exist. "4.2.0" is a valid, recent version.
-    targetRevision: 2.10.3
+    targetRevision: 6.45.2
     # --- END OF FIX ---
     helm:
       values: |
