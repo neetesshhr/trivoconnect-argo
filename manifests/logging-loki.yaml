@@ -13,7 +13,7 @@ spec:
     chart: loki-stack
     # --- THIS IS THE FIX ---
     # "2.13.0" did not exist. "4.2.0" is a valid, recent version.
-    targetRevision: 4.2.0
+    targetRevision: 6.5.3
     # --- END OF FIX ---
     helm:
       values: |
