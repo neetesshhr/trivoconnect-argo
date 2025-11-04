@@ -1,55 +1,42 @@
-# File: manifests/prometheus-grafana.yaml
-
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  # This is the app tile in Argo CD
   name: prometheus-grafana
   namespace: argocd
 spec:
   project: default
   source:
-    # This is the Helm chart from the article
     repoURL: https://prometheus-community.github.io/helm-charts
     chart: kube-prometheus-stack
-    targetRevision: 58.1.0 # A recent, stable version
+    targetRevision: 58.1.0
     helm:
       values: |
-        # 1. We will create and use the 'monitoring' namespace
         namespace: "monitoring"
         
-        # 2. Prometheus Configuration
         prometheus:
           prometheusSpec:
             storageSpec:
               volumeClaimTemplate:
                 spec:
-                  # Use GKE's default 'standard-rwo' storage class
                   storageClassName: "standard-rwo"
                   accessModes: ["ReadWriteOnce"]
                   resources:
                     requests:
-                      # 10GB for Prometheus data
                       storage: 10Gi
             
-        # 3. Grafana Configuration
         grafana:
           persistence:
             enabled: true
             type: pvc
-            # Use GKE's default 'standard-rwo' storage class
             storageClassName: "standard-rwo"
             accessModes: ["ReadWriteOnce"]
-            size: 10Gi # 10GB for Grafana dashboards/settings
+            size: 10Gi
 
-          # 4. Grafana Ingress (This is the important part)
           ingress:
             enabled: true
             ingressClassName: nginx
             annotations:
-              # Use our 'letsencrypt-http' issuer
               cert-manager.io/cluster-issuer: "letsencrypt-http"
-              # Allow cert-manager to solve the HTTP challenge
               nginx.ingress.kubernetes.io/ssl-redirect: "false"
             hosts:
               - grafana.trivoconnect.com
@@ -57,26 +44,19 @@ spec:
               - hosts:
                 - grafana.trivoconnect.com
                 secretName: grafana-tls-secret
-            additionalDataSources:
+          
+          additionalDataSources:
             - name: Loki
               type: loki
-              # This is the internal URL for the Loki server
-              url: http://loki-stack.monitoring.svc.cluster.local:3100
+              url: http://loki-server-headless.monitoring.svc.cluster.local:3100
               access: proxy
-              isDefault: false # Set to true if you want Loki as the default
+              isDefault: false
               jsonData: {}
 
   destination:
-    # Tell Argo CD to deploy this into the 'monitoring' namespace
     server: https://kubernetes.default.svc
     namespace: monitoring
     
   syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-    # This will create the 'monitoring' namespace for us
-    - "CreateNamespace=true"
-    # This will fix any CRD installation issues
-    - "ServerSideApply=true"
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [ "CreateNamespace=true", "ServerSideApply=true" ]
