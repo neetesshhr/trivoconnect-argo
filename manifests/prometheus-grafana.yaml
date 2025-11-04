@@ -46,7 +46,7 @@ spec:
             user: null 
 
           envFromSecrets:
-            - name: grafana-google-sso # The secret you created
+            - name: grafana-google-sso 
 
           grafana.ini:
             server:
@@ -57,22 +57,14 @@ spec:
             auth.generic_oauth:
               enabled: true
               name: "Google"
-              
-              # The '$$' is correct
-              client_id: $$GOOGLE_CLIENT_ID
-              client_secret: $$GOOGLE_CLIENT_SECRET
-              
+              client_id: $GOOGLE_CLIENT_ID
+              client_secret: $GOOGLE_CLIENT_SECRET
               auth_url: https://accounts.google.com/o/oauth2/auth
               token_url: https://oauth2.googleapis.com/token
               api_url: https://www.googleapis.com/oauth2/v1/userinfo
-              
               scopes: "openid email profile https://www.googleapis.com/auth/admin.directory.group.readonly"
-              
               groups_attribute_path: "https://admin.googleapis.com/admin/directory/v1/groups?userKey=__user_email__"
-              
-              # Using your correct group email
               role_attribute_path: "contains(groups[*].email, 'grafana@trivoconnect.com') ? 'Admin' : 'Viewer'"
-              
               allowed_domains: "trivoconnect.com"
               allow_sign_up: true
 
