@@ -11,18 +11,17 @@ spec:
   source:
     repoURL: https://grafana.github.io/helm-charts
     chart: loki-stack
-    # Use a modern, stable version
-    targetRevision: 2.13.0
+    # --- THIS IS THE FIX ---
+    # "2.13.0" did not exist. "4.2.0" is a valid, recent version.
+    targetRevision: 4.2.0
+    # --- END OF FIX ---
     helm:
       values: |
-        # 1. Install into our existing 'monitoring' namespace
-        namespace: "monitoring"
-
-        # 2. We already have Grafana, so disable this one
+        # 1. We already have Grafana, so disable this one
         grafana:
           enabled: false
 
-        # 3. Loki Configuration
+        # 2. Loki Configuration
         loki:
           # Use GKE's default 'standard-rwo' storage class
           storageClassName: "standard-rwo"
@@ -30,13 +29,13 @@ spec:
             enabled: true
             size: 20Gi # 20GB for logs
         
-        # 4. Promtail (the GKE log shipper)
+        # 3. Promtail (the GKE log shipper)
         # This will ship your *cluster's* pod logs to Loki
         promtail:
           enabled: true
           storageClassName: "standard-rwo"
 
-        # 5. Ingress (to receive logs from EC2)
+        # 4. Ingress (to receive logs from EC2)
         # This creates the public URL for your EC2 server
         ingress:
           enabled: true
