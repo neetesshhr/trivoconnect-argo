@@ -48,7 +48,7 @@ spec:
           additionalDataSources:
             - name: Loki
               type: loki
-              url: http://loki-server-headless.monitoring.svc.cluster.local:3100
+              url: url: http://loki-stack.monitoring.svc.cluster.local:3100
               access: proxy
               isDefault: false
               jsonData: {}

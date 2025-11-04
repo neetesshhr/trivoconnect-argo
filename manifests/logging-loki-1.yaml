@@ -1,0 +1,61 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki-stack
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    
+    # --- THIS IS THE FIX ---
+    # Use the older, lighter, deprecated chart
+    chart: loki-stack
+    targetRevision: 2.10.3
+    # --- END OF FIX ---
+
+    helm:
+      values: |
+        # 1. Install into our 'monitoring' namespace
+        namespace: "monitoring"
+        
+        # 2. We already have Grafana, so disable this one
+        grafana:
+          enabled: false
+
+        # 3. Loki Configuration
+        loki:
+          storageClassName: "standard-rwo"
+          persistence:
+            enabled: true
+            size: 10Gi # 10GB is fine for a small app
+        
+        # 4. Promtail (the GKE log shipper)
+        promtail:
+          enabled: true
+          storageClassName: "standard-rwo"
+
+        # 5. Ingress (to receive logs from EC2)
+        ingress:
+          enabled: true
+          ingressClassName: nginx
+          annotations:
+            cert-manager.io/cluster-issuer: "letsencrypt-http"
+            nginx.ingress.kubernetes.io/ssl-redirect: "false"
+          hosts:
+            - host: loki.trivoconnect.com
+              paths:
+                - path: /
+                  pathType: Prefix
+          tls:
+            - hosts:
+              - loki.trivoconnect.com
+              secretName: loki-tls-secret
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+    
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [ "CreateNamespace=true", "ServerSideApply=true" ]
