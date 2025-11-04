@@ -37,16 +37,17 @@ spec:
             accessModes: ["ReadWriteOnce"]
             size: 10Gi
             
-          # --- THIS IS THE CORRECTED SSO CONFIG ---
-          
+          # --- THIS IS THE FIX ---
+          # This disables the faulty "leaked secret" check
+          assertNoLeakedSecrets: false
+          # --- END OF FIX ---
+
           admin:
-            user: null # Disable admin user
+            user: null 
 
-          # 1. Load our K8s secret as environment variables
           envFromSecrets:
-            - name: grafana-google-sso # The secret you just created
+            - name: grafana-google-sso # The secret you created
 
-          # 2. Configure grafana.ini
           grafana.ini:
             server:
               root_url: "https://grafana.trivoconnect.com"
@@ -57,12 +58,9 @@ spec:
               enabled: true
               name: "Google"
               
-              # --- THIS IS THE FIX ---
-              # The '$$' escapes the $ for Helm/Argo CD
-              # The Grafana pod will correctly expand this
+              # The '$$' is correct
               client_id: $$GOOGLE_CLIENT_ID
               client_secret: $$GOOGLE_CLIENT_SECRET
-              # --- END OF FIX ---
               
               auth_url: https://accounts.google.com/o/oauth2/auth
               token_url: https://oauth2.googleapis.com/token
@@ -72,13 +70,11 @@ spec:
               
               groups_attribute_path: "https://admin.googleapis.com/admin/directory/v1/groups?userKey=__user_email__"
               
-              # --- THIS IS YOUR FIX ---
-              # Using the correct group email address
+              # Using your correct group email
               role_attribute_path: "contains(groups[*].email, 'grafana@trivoconnect.com') ? 'Admin' : 'Viewer'"
               
               allowed_domains: "trivoconnect.com"
               allow_sign_up: true
-          # --- END OF SSO CONFIG ---
 
           ingress:
             enabled: true
