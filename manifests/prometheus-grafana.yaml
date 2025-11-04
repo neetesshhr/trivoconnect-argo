@@ -57,6 +57,14 @@ spec:
               - hosts:
                 - grafana.trivoconnect.com
                 secretName: grafana-tls-secret
+            additionalDataSources:
+            - name: Loki
+              type: loki
+              # This is the internal URL for the Loki server
+              url: http://loki-stack.monitoring.svc.cluster.local:3100
+              access: proxy
+              isDefault: false # Set to true if you want Loki as the default
+              jsonData: {}
 
   destination:
     # Tell Argo CD to deploy this into the 'monitoring' namespace
