@@ -1,64 +1,64 @@
-# File: manifests/logging-loki.yaml
+# # File: manifests/logging-loki.yaml
 
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: loki-server
-  namespace: argocd
-spec:
-  project: default
-  source:
-    repoURL: https://grafana.github.io/helm-charts
-    chart: loki
-    targetRevision: 6.45.2
-    helm:
-      values: |
-        # --- THIS IS THE FIX ---
-        # We must explicitly tell Loki to run as a single pod,
-        # which is the only mode that supports filesystem storage.
-        deploymentMode: SingleBinary
-        # --- END OF FIX ---
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+# metadata:
+#   name: loki-server
+#   namespace: argocd
+# spec:
+#   project: default
+#   source:
+#     repoURL: https://grafana.github.io/helm-charts
+#     chart: loki
+#     targetRevision: 6.45.2
+#     helm:
+#       values: |
+#         # --- THIS IS THE FIX ---
+#         # We must explicitly tell Loki to run as a single pod,
+#         # which is the only mode that supports filesystem storage.
+#         deploymentMode: SingleBinary
+#         # --- END OF FIX ---
 
-        grafana:
-          enabled: false
+#         grafana:
+#           enabled: false
         
-        promtail:
-          enabled: false
+#         promtail:
+#           enabled: false
           
-        loki:
-          # This tells the SingleBinary pod to use the filesystem
-          storage:
-            type: 'filesystem'
-            bucketNames:
-              chunks: loki-chunks
-              ruler: loki-ruler
-              admin: loki-admin
+#         loki:
+#           # This tells the SingleBinary pod to use the filesystem
+#           storage:
+#             type: 'filesystem'
+#             bucketNames:
+#               chunks: loki-chunks
+#               ruler: loki-ruler
+#               admin: loki-admin
           
-          # This configures the persistent volume
-          storageClassName: "standard-rwo"
-          persistence:
-            enabled: true
-            size: 20Gi
-            storageClassName: standard-rwo
+#           # This configures the persistent volume
+#           storageClassName: "standard-rwo"
+#           persistence:
+#             enabled: true
+#             size: 20Gi
+#             storageClassName: standard-rwo
         
-        ingress:
-          enabled: true
-          ingressClassName: nginx
-          annotations:
-            cert-manager.io/cluster-issuer: "letsencrypt-http"
-            nginx.ingress.kubernetes.io/ssl-redirect: "false"
-          hosts:
-            - host: loki.trivoconnect.com
-              paths: [] # Let the chart auto-configure paths
-          tls:
-            - hosts:
-              - loki.trivoconnect.com
-              secretName: loki-tls-secret
+#         ingress:
+#           enabled: true
+#           ingressClassName: nginx
+#           annotations:
+#             cert-manager.io/cluster-issuer: "letsencrypt-http"
+#             nginx.ingress.kubernetes.io/ssl-redirect: "false"
+#           hosts:
+#             - host: loki.trivoconnect.com
+#               paths: [] # Let the chart auto-configure paths
+#           tls:
+#             - hosts:
+#               - loki.trivoconnect.com
+#               secretName: loki-tls-secret
 
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: monitoring
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: monitoring
     
-  syncPolicy:
-    automated: { prune: true, selfHeal: true }
-    syncOptions: [ "CreateNamespace=true", "ServerSideApply=true" ]
+#   syncPolicy:
+#     automated: { prune: true, selfHeal: true }
+#     syncOptions: [ "CreateNamespace=true", "ServerSideApply=true" ]
