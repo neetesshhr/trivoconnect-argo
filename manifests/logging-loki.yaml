@@ -11,6 +11,7 @@ spec:
   source:
     repoURL: https://grafana.github.io/helm-charts
     chart: loki-stack
+    # Use a modern, stable version
     targetRevision: 2.13.0
     helm:
       values: |
@@ -23,19 +24,20 @@ spec:
 
         # 3. Loki Configuration
         loki:
-          # Use the GKE-standard storage class
+          # Use GKE's default 'standard-rwo' storage class
           storageClassName: "standard-rwo"
           persistence:
             enabled: true
             size: 20Gi # 20GB for logs
         
         # 4. Promtail (the GKE log shipper)
-        # We'll keep this enabled to get your cluster's own logs
+        # This will ship your *cluster's* pod logs to Loki
         promtail:
           enabled: true
           storageClassName: "standard-rwo"
 
         # 5. Ingress (to receive logs from EC2)
+        # This creates the public URL for your EC2 server
         ingress:
           enabled: true
           ingressClassName: nginx
