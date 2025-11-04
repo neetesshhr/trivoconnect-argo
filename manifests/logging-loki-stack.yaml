@@ -29,7 +29,7 @@ spec:
           ingressClassName: nginx
           annotations:
             cert-manager.io/cluster-issuer: "letsencrypt-http"
-            nginx.ingress.kubernetes.io/ssl-redirect: "false"
+            nginx.ingress.kubernetes.io/ssl-redirect: "true"
           hosts:
             - host: lki.trivoconnect.com
               paths:
