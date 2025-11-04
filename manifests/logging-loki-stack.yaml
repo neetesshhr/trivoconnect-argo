@@ -12,36 +12,33 @@ spec:
     helm:
       values: |
         namespace: "monitoring"
-
         grafana:
           enabled: false
-
         loki:
-          enabled: true
+          image:
+            tag: '2.9.3'
           storageClassName: "standard-rwo"
           persistence:
             enabled: true
             size: 10Gi
-          config:
-            server:
-              http_listen_port: 3100
-            auth_enabled: false
-
         promtail:
           enabled: true
           storageClassName: "standard-rwo"
-
         ingress:
           enabled: true
           ingressClassName: nginx
           annotations:
+            cert-manager.io/cluster-issuer: "letsencrypt-http"
             nginx.ingress.kubernetes.io/ssl-redirect: "false"
           hosts:
             - host: loki.trivoconnect.com
               paths:
                 - path: /
                   pathType: Prefix
-
+          tls:
+            - hosts:
+              - loki.trivoconnect.com
+              secretName: loki-tls-secret
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
