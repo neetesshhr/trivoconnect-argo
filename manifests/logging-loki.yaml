@@ -18,10 +18,8 @@ spec:
           # Storage setup for filesystem mode.
           storage:
             type: filesystem
-            bucketNames:
-              chunks: loki-chunks
-              ruler: loki-ruler
-              admin: loki-admin
+            filesystem:
+              directory: /var/loki/data
 
           persistence:
             enabled: true
