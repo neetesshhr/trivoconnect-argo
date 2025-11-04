@@ -22,6 +22,17 @@ spec:
                   resources:
                     requests:
                       storage: 10Gi
+
+            additionalScrapeConfigs:
+              - job_name: 'ec2-node'
+                static_configs:
+                  # --- THIS IS THE FIX ---
+                  # Remove the 'http://' prefix
+                  - targets: ['34.227.214.46:9100']
+                  # --- END OF FIX ---
+                    labels:
+                      instance: 'trivoconnect-ec2-server'
+
         grafana:
           persistence:
             enabled: true
