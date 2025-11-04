@@ -11,28 +11,33 @@ spec:
     targetRevision: 6.45.2
     helm:
       values: |
-        # Loki runs in "SimpleScalable" (default) mode for S3
+        # Loki runs in "SimpleScalable" mode (recommended for S3)
         deploymentMode: SimpleScalable
 
         loki:
           commonConfig:
             replication_factor: 1
 
-          # Loki storage backend: S3
-          storage:
-            type: s3
-            bucketNames:
-              chunks: loki-chunks
-              ruler:  loki-ruler
-              admin:  loki-admin
-
-          # Pass S3 credentials to Loki pods
+          # Attach your secret with AWS credentials
           extraEnvFrom:
             - secretRef:
                 name: loki-s3-creds
 
-          # Loki configuration for S3 backend
-          config:
+          # S3 bucket details (for Helm chart internal templates)
+          storage:
+            type: s3
+            bucketNames:
+              chunks: loki-chunks
+              ruler: loki-ruler
+              admin: loki-admin
+
+          # Loki configuration must be a YAML string
+          config: |
+            auth_enabled: false
+
+            server:
+              http_listen_port: 3100
+
             schema_config:
               configs:
                 - from: 2024-11-01
@@ -48,7 +53,7 @@ spec:
                 shared_store: s3
                 active_index_directory: /var/loki/index
                 cache_location: /var/loki/cache
-              
+
               aws:
                 s3: s3://trivo-logs-bucket
                 region: us-east-1
@@ -56,17 +61,29 @@ spec:
                 access_key_id: $(S3_ACCESS_KEY_ID)
                 secret_access_key: $(S3_SECRET_ACCESS_KEY)
 
-        # Disable Grafana and Promtail (you already deploy separately)
+            limits_config:
+              retention_period: 168h
+              reject_old_samples: true
+              reject_old_samples_max_age: 168h
+
+            chunk_store_config:
+              max_look_back_period: 168h
+
+            table_manager:
+              retention_deletes_enabled: true
+              retention_period: 168h
+
+        # Disable persistence — we rely on S3
+        persistence:
+          enabled: false
+
+        # Disable Grafana/Promtail
         grafana:
           enabled: false
         promtail:
           enabled: false
 
-        # Disable local persistence, as S3 is used for storage
-        persistence:
-          enabled: false
-
-        # Enable public ingress for Loki API
+        # Optional: ingress for external Loki API access
         ingress:
           enabled: true
           ingressClassName: nginx
