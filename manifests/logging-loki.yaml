@@ -16,8 +16,13 @@ spec:
         loki:
           auth_enabled: false
 
+          # S3 backend
           storage:
             type: s3
+            bucketNames:
+              chunks: loki-chunks
+              ruler: loki-ruler
+              admin: loki-admin
             s3:
               s3: s3://trivo-logs-bucket
               region: us-east-1
