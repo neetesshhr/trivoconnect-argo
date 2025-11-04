@@ -11,83 +11,45 @@ spec:
     targetRevision: 6.45.2
     helm:
       values: |
-        # Note: deploymentMode MUST be under "loki" to be picked up by the chart
+        # Minimal Loki setup
+        deploymentMode: single
+
         loki:
-          deploymentMode: SimpleScalable
-          commonConfig:
-            replication_factor: 1
+          auth_enabled: false
 
-          # S3 logical bucket names (required by chart templates)
+          # Use local filesystem for simplicity (no S3)
           storage:
-            type: s3
-            bucketNames:
-              chunks: loki-chunks
-              ruler: loki-ruler
-              admin: loki-admin
+            type: filesystem
+            filesystem:
+              directory: /data/loki
 
-          # Inject AWS creds (from Kubernetes Secret) as env vars into pods
-          extraEnvFrom:
-            - secretRef:
-                name: loki-s3-creds
+          schemaConfig:
+            configs:
+              - from: 2020-10-15
+                store: boltdb
+                object_store: filesystem
+                schema: v11
+                index:
+                  prefix: index_
+                  period: 168h
 
-          # Loki runtime configuration MUST be a YAML string (block scalar).
-          # This defines schema_config and storage_config used by the chart templates.
-          config: |
-            auth_enabled: false
-
-            server:
-              http_listen_port: 3100
-
-            schema_config:
-              configs:
-                - from: 2024-11-01
-                  store: boltdb-shipper
-                  object_store: s3
-                  schema: v12
-                  index:
-                    prefix: loki_index_
-                    period: 24h
-
-            storage_config:
-              boltdb_shipper:
-                shared_store: s3
-                active_index_directory: /var/loki/index
-                cache_location: /var/loki/cache
-              aws:
-                s3: s3://trivo-logs-bucket
-                region: us-east-1
-                s3forcepathstyle: true
-                # These refer to env vars injected from the Secret above
-                access_key_id: $(S3_ACCESS_KEY_ID)
-                secret_access_key: $(S3_SECRET_ACCESS_KEY)
-
-            limits_config:
-              retention_period: 168h
-
-            chunk_store_config:
-              max_look_back_period: 168h
-
-            table_manager:
-              retention_deletes_enabled: true
-              retention_period: 168h
-
-        # We rely on S3, so local persistence turned off for index/chunks
-        persistence:
-          enabled: false
-
-        # Disable bundled grafana/promtail (you said you have them separately)
+          # Disable Grafana & Promtail (already deployed separately)
         grafana:
           enabled: false
         promtail:
           enabled: false
 
-        # Ingress (optional) - adjust host/annotations/secret to your env
+        # Minimal persistence (local only)
+        persistence:
+          enabled: false
+
+        # Public ingress for Loki API
         ingress:
           enabled: true
           ingressClassName: nginx
           annotations:
             cert-manager.io/cluster-issuer: "letsencrypt-http"
-            nginx.ingress.kubernetes.io/ssl-redirect: "false"
+            nginx.ingress.kubernetes.io/ssl-redirect: "true"
           hosts:
             - host: loki.trivoconnect.com
               paths: []
