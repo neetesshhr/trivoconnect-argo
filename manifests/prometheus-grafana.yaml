@@ -43,7 +43,7 @@ spec:
                 secretName: grafana-tls-secret
           
           # --- THIS IS THE FIX ---
-          # We must tell Grafana *how* to query Loki
+          # This tells Grafana HOW to talk to Loki
           additionalDataSources:
             - name: Loki
               type: loki
@@ -51,11 +51,8 @@ spec:
               access: proxy
               isDefault: false
               jsonData:
-                # This line tells Grafana to use LogQL
-                derivedFields:
-                  - datasourceUid: tempo
-                    matcherRegex: 'traceID=([a-f0-9]{32})'
-                    name: traceID
+                # This tells Grafana to use LogQL
+                queryType: "LOKI"
           # --- END OF FIX ---
 
   destination:
