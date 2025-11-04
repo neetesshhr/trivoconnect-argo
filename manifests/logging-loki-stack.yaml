@@ -43,7 +43,7 @@ spec:
           tls:
             - hosts:
               - lki.trivoconnect.com
-              # 2. Use a new secret name for the new domain
+              # 2. Use the correct secret name for the new domain
               secretName: lki-tls-secret
         # --- END OF FIX ---
 
