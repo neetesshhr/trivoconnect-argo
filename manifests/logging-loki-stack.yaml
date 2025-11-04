@@ -14,6 +14,7 @@ spec:
         namespace: "monitoring"
         grafana:
           enabled: false
+        
         loki:
           image:
             tag: '2.9.3'
@@ -21,6 +22,13 @@ spec:
           persistence:
             enabled: true
             size: 10Gi
+            
+        promtail:
+          enabled: true
+          storageClassName: "standard-rwo"
+          
+        # --- THIS IS THE FIX ---
+        # 1. 'ingress:' is now at the correct top-level indentation.
         ingress:
           enabled: true
           ingressClassName: nginx
@@ -34,11 +42,11 @@ spec:
                   pathType: Prefix
           tls:
             - hosts:
-                - lki.trivoconnect.com
+              - lki.trivoconnect.com
+              # 2. Use a new secret name for the new domain
               secretName: lki-tls-secret
-        promtail:
-          enabled: true
-          storageClassName: "standard-rwo"
+        # --- END OF FIX ---
+
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
