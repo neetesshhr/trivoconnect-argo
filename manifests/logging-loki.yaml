@@ -16,7 +16,6 @@ spec:
         loki:
           auth_enabled: false
 
-          # S3 storage configuration
           storage:
             type: s3
             s3:
@@ -36,17 +35,13 @@ spec:
                   prefix: loki_index_
                   period: 24h
 
-        # Disable Grafana and Promtail
         grafana:
           enabled: false
         promtail:
           enabled: false
-
-        # Disable local persistence
         persistence:
           enabled: false
 
-        # Public ingress for Loki API
         ingress:
           enabled: true
           ingressClassName: nginx
@@ -54,12 +49,11 @@ spec:
             cert-manager.io/cluster-issuer: "letsencrypt-http"
             nginx.ingress.kubernetes.io/ssl-redirect: "true"
           hosts:
-            - host: loki.trivoconnect.com
-              paths: []
+            - loki.trivoconnect.com
           tls:
-            - hosts:
+            - secretName: loki-tls-secret
+              hosts:
                 - loki.trivoconnect.com
-              secretName: loki-tls-secret
 
   destination:
     server: https://kubernetes.default.svc
