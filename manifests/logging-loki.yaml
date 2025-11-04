@@ -11,9 +11,10 @@ spec:
     targetRevision: 6.45.2
     helm:
       values: |
+        deploymentMode: SingleBinary
         loki:
           # Use single-binary mode which supports filesystem storage. :contentReference[oaicite:1]{index=1}
-          deploymentMode: SingleBinary
+          
 
           # Storage setup for filesystem mode.
           storage:
