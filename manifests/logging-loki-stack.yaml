@@ -22,10 +22,18 @@ spec:
           persistence:
             enabled: true
             size: 10Gi
+          resources:
+            requests:
+              cpu: 50m
+              memory: 150Mi
             
         promtail:
           enabled: true
           storageClassName: "standard-rwo"
+          resources:
+            requests:
+              cpu: 20m
+              memory: 50Mi
           
         # --- THIS IS THE FIX ---
         # 1. 'ingress:' is now at the correct top-level indentation.

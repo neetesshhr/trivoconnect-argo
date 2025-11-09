@@ -1,0 +1,19 @@
+# This file patches the Dex server to load the secret
+spec:
+  template:
+    spec:
+      containers:
+      - name: dex
+        envFrom:
+        - secretRef:
+            name: argocd-secret
+---
+# This file patches the Argo CD server to load the secret
+spec:
+  template:
+    spec:
+      containers:
+      - name: argocd-server
+        envFrom:
+        - secretRef:
+            name: argocd-secret
