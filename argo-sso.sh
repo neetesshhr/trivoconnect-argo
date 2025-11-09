@@ -4,8 +4,8 @@
 # 1. EDIT THESE VALUES
 # ===================================================================
 # Paste your Google Client ID and Secret here
-GOOGLE_CLIENT_ID="551885233791-3err94m9unimkt0epkbqmoe6n1l5istk.apps.googleusercontent.com"
-GOOGLE_CLIENT_SECRET="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"
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 # ===================================================================
 
 set -e
@@ -32,8 +32,8 @@ data:
   oidc.config: |
     name: Google
     issuer: https://argocd.trivoconnect.com/api/dex
-    clientID: 551885233791-3err94m9unimkt0epkbqmoe6n1l5istk.apps.googleusercontent.com
-    clientSecret: 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
+    clientID: $GOOGLE_CLIENT_ID
+    clientSecret: $GOOGLE_CLIENT_SECRET
     requestedScopes: ["openid", "profile", "email", "groups"]
 
 
@@ -44,8 +44,8 @@ data:
       name: Google
       config:
         baseURL: https://argocd.trivoconnect.com/api/dex
-        clientID: 551885233791-3err94m9unimkt0epkbqmoe6n1l5istk.apps.googleusercontent.com
-        clientSecret: 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
+        clientID: $GOOGLE_CLIENT_ID
+        clientSecret: $GOOGLE_CLIENT_SECRET
         scopes:
         - openid
         - email
